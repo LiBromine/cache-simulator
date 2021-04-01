@@ -13,14 +13,14 @@ using namespace std;
 int main() {
     
     // other config
-    string input = "../test_trace/1.trace"; // var
+    string input = "../test_trace/4.trace"; // var
     // string output = "../out/8B-8way-BT-1.log"; // var
     string output = "../out/debug.log";
     bool print = false;
     const int COUNTER_MAX = 1000;
 
     // init
-    Btree selector;
+    Selector selector(rp);
     ifstream f(input);
     ofstream of(output);
     Cache cache(w0, w1);
