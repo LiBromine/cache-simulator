@@ -6,6 +6,7 @@ enum ReplacePolicy {
     LRU,
     BT,
     Direct,
+    Score,
 };
 
 enum WritePolicy0 {
@@ -25,7 +26,7 @@ const int LINE_SIZE = 8; // variable
 const int CACHE_LINE_NUM = CACHE_SIZE / LINE_SIZE;
 const int WAY_NUM = 8;   // variable
 const bool FULL = false; // variable
-const ReplacePolicy rp = ReplacePolicy::BT; // variable
+const ReplacePolicy rp = ReplacePolicy::Score; // variable
 const WritePolicy0 w0 = WritePolicy0::WriteBack;  // variable
 const WritePolicy1 w1 = WritePolicy1::WriteAlloc; // variable
 

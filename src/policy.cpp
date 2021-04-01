@@ -212,6 +212,144 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
     return -1;
 }
 
+/* ScoreLine method */
+int ScoreLine::initial = 32;
+int ScoreLine::inc = 40;
+int ScoreLine::dec = 1;
+int ScoreLine::threhold = 24;
+int ScoreLine::seed = 1;
+int ScoreLine::rand() {
+    return ++seed;
+}
+
+ScoreLine::ScoreLine() {
+    memset(this->meta, 0, (WAY_NUM * bit + 7) >> 3);
+}
+
+// protected
+void ScoreLine::set(int k) {
+    meta[k >> 3] |= 0x80 >> (k & 0x07);
+}
+
+bool ScoreLine::test(int k) {
+    return meta[k >> 3] & (0x80 >> (k & 0x07));
+}
+
+void ScoreLine::clear(int k) {
+    meta[k >> 3] &= ~(0x80 >> (k & 0x07));
+}
+
+void ScoreLine::setTuple(int pos, int val) {
+    // assert: 0 <= pos <= 7, 0 <= val < 2^bit
+    pos &= 0x7;
+    for (int i = 0; i < bit; i++) {
+        if (val & (1 << (bit - i - 1))) this->set(pos * bit + i);
+        else this->clear(pos * bit + i);
+    }
+}
+
+int ScoreLine::getTuple(int pos) {
+    // assert: 0 <= pos <= 7
+    int ret = 0;
+    for (int i = 0; i < bit; i++) {
+        ret <<= 1;
+        ret |= this->test(pos * bit + i);
+    }
+    return ret & ((1 << bit) - 1);
+}
+
+int ScoreLine::findTuple(int val) {
+    return -1;
+}
+
+void ScoreLine::decTuple(int pos) {
+    int val = this->getTuple(pos);
+    if (val - ScoreLine::dec >= 0) val -= ScoreLine::dec;
+    else val = 0;
+    this->setTuple(pos, val);
+}
+
+void ScoreLine::incTuple(int pos) {
+    int val = this->getTuple(pos);
+    if (val + ScoreLine::inc < (1 << bit)) val += ScoreLine::inc;
+    else val = (1 << bit) - 1;
+    this->setTuple(pos, val);
+}
+
+int ScoreLine::access(const Cache *cache, long long tag, int index) {
+    // try to hit, may not return
+    for (int i = 0; i < WAY_NUM; i++) {
+        int tmpIndex = index + i * ONE_WAY_LINE_NUM;
+        if (cache->data[tmpIndex].isHit(tag)) {
+            // hit, maintain the score
+            for (int j = 0; j < WAY_NUM; j++)
+                if (j != i) this->decTuple(j);
+            this->incTuple(i);
+            return tmpIndex;
+        }
+    }
+
+    // try to find a unallocated line, may not return
+    for (int i = 0; i < WAY_NUM; i++) {
+        int tmpIndex = index + i * ONE_WAY_LINE_NUM;
+        if (!cache->data[tmpIndex].isValid()) {
+            // find a free line, maintain the score
+            for (int j = 0; j < WAY_NUM; j++)
+                if (j != i) this->decTuple(j);
+            this->setTuple(i, ScoreLine::initial);
+            return tmpIndex;
+        }
+    }
+
+    // replace
+    int count = 0;
+    int minRank = -1;
+    for (int i = 0; i < WAY_NUM; i++) { // scanning
+        if (this->getTuple(i) <= ScoreLine::threhold) {
+            count++;
+        }
+        if (minRank == -1 || this->getTuple(i) < this->getTuple(minRank)) {
+            minRank = i;
+        }
+    }
+
+    int targetRank = -1;
+    if (!count) {
+        // target line is the line with the min score
+        targetRank = minRank;
+    } else {
+        // randomize a line with score lowering to threhold
+        int rand = ScoreLine::rand() % count;
+        for (int i = 0; i < WAY_NUM; i++) {
+            if (this->getTuple(i) <= ScoreLine::threhold) {
+                if (!rand) {
+                    targetRank = i;
+                    break;
+                }
+                rand--;
+            }
+        }
+    }
+    // update , and replace the line with min score
+    for (int j = 0; j < WAY_NUM; j++)
+        if (j != targetRank) this->decTuple(j);
+    this->setTuple(targetRank, ScoreLine::initial); // varibale, initial or increase
+    return index + targetRank * ONE_WAY_LINE_NUM;
+}
+
+/* Score method */
+Scorer::Scorer() {
+    this->data = new ScoreLine[ONE_WAY_LINE_NUM];
+}
+
+Scorer::~Scorer() {
+    delete []this->data;
+}
+
+int Scorer::getRank(const Cache *cache, long long tag, int index) {
+    return this->data[index].access(cache, tag, index);
+}
+
 /* Selector method */
 Selector::Selector(ReplacePolicy rp_) {
     this->rp = rp_;
@@ -224,6 +362,9 @@ Selector::Selector(ReplacePolicy rp_) {
         break;
     case ReplacePolicy::LRU:
         this->LRU = new LRUstack();
+        break;
+    case ReplacePolicy::Score:
+        this->S = new Scorer();
         break;
     default:
         break;
@@ -241,6 +382,9 @@ Selector::~Selector() {
     case ReplacePolicy::LRU:
         delete this->LRU;
         break;
+    case ReplacePolicy::Score:
+        delete this->S;
+        break;
     default:
         break;
     }
@@ -257,6 +401,8 @@ int Selector::getRank(const Cache *cache, long long tag, int index) {
     case ReplacePolicy::LRU:
         return this->LRU->getRank(cache, tag, index);
         break;
+    case ReplacePolicy::Score:
+        return this->S->getRank(cache, tag, index);
     default:
         exit(-1);
     }

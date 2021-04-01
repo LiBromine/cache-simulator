@@ -54,6 +54,39 @@ public:
     int getRank(const Cache *cache, long long tag, int index);
 };
 
+const int bit = 6;
+class ScoreLine {
+public:
+    static int initial;
+    static int inc;
+    static int dec;
+    static int threhold;
+    static int seed;
+    char meta[(WAY_NUM * bit + 7) >> 3];
+
+    ScoreLine();
+    int access(const Cache *cache, long long tag, int index);
+
+protected:
+    bool test(int k);
+    void set(int k);
+    void clear(int k);
+    void setTuple(int pos, int val);
+    int getTuple(int pos);
+    int findTuple(int val);
+    void decTuple(int pos);
+    void incTuple(int pos);
+    
+    static int rand();
+};
+
+class Scorer {
+public:
+    ScoreLine *data;
+    Scorer();
+    ~Scorer();
+    int getRank(const Cache *cache, long long tag, int index);
+};
 
 class Selector {
 public:
@@ -61,6 +94,7 @@ public:
     DirectMap *D;
     LRUstack *LRU;
     Btree *BT;
+    Scorer *S;
 
     int getRank(const Cache *cache, long long tag, int index);
     Selector(ReplacePolicy);

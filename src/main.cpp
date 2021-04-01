@@ -14,7 +14,7 @@ int main() {
     
     // other config
     string input = "../test_trace/4.trace"; // var
-    // string output = "../out/8B-8way-BT-1.log"; // var
+    // string output = "../out/8B-8way-LRU-1.log"; // var
     string output = "../out/debug.log";
     bool print = false;
     const int COUNTER_MAX = 1000;
