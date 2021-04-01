@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <bitset>
 #include <fstream>
 #include "config.h"
 #include "cache.h"
@@ -10,13 +9,36 @@
 
 using namespace std;
 
-int main() {
+ReplacePolicy rp = ReplacePolicy::BT; // variable
+WritePolicy0 w0 = WritePolicy0::WriteBack;  // variable
+WritePolicy1 w1 = WritePolicy1::WriteAlloc;  // variable
+
+int main(int argc, char *argv[]) {
     
-    // other config
+    // config
     string input = "../test_trace/4.trace"; // var
     // string output = "../out/8B-8way-LRU-1.log"; // var
     string output = "../out/debug.log";
     bool print = false;
+    if (argc == 2) {
+        input = argv[1];
+    } else if (argc == 5) {
+        input = argv[1];
+        rp = parseRp(argv[2]);
+        w0 = parseW0(argv[3]);
+        w1 = parseW1(argv[4]);
+    } else if (argc == 6) {
+        input = argv[1];
+        rp = parseRp(argv[2]);
+        w0 = parseW0(argv[3]);
+        w1 = parseW1(argv[4]);
+        output = argv[5];
+        print = true;
+    } else {
+        printUsage();
+        exit(-1);
+    }
+    
     const int COUNTER_MAX = 1000;
 
     // init
@@ -38,7 +60,7 @@ int main() {
     // print config
     printConfig(input);
 
-    
+
     // access memory
     if (f.is_open()) {
         while (getline(f, line)) {

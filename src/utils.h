@@ -10,5 +10,10 @@ std::string print(WritePolicy0 w);
 std::string print(WritePolicy1 w);
 std::string print(ReplacePolicy rp);
 
+void printUsage();
 void printBinary(long long target, int width);
 void printLineBinary(long long target, int width);
+
+ReplacePolicy parseRp(std::string);
+WritePolicy0 parseW0(std::string);
+WritePolicy1 parseW1(std::string);

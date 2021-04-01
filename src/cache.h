@@ -1,7 +1,6 @@
 #ifndef CACHE_H
 #define CACHE_H
 #include "config.h"
-#include <string>
 
 const int N = 8;
 const int valid_pos = 0;
