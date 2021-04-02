@@ -8,7 +8,13 @@ extern WritePolicy1 w1;
 
 long long getTag(long long addr, int width, int prefix_width) {
     addr >>= prefix_width;
-    long long mask = (1 << width) - 1;
+    long long mask = (1l << width) - 1;
+    // std::cout << "get tag" << std::endl;
+    // std::cout << width << ' ' << prefix_width << std::endl;
+    // std::cout << std::hex << addr << std::endl;
+    // std::cout << mask << std::endl;
+    // std::cout << (addr & mask) << std::dec << std::endl;
+    // std::cout << "get tag end" << std::endl;
     return addr & mask;
 }
 

@@ -197,7 +197,7 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
             if (hit) {
                 // update the BT
                 this->insert(i);
-                // std::cout << "hit with index " << index + ONE_WAY_LINE_NUM * i << ' ';
+                // std::cout << "hit with index " << i << ' ';
                 // printLine();
                 return index + ONE_WAY_LINE_NUM * i;
             } 
@@ -209,6 +209,8 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
             if (!cache->data[tmpIndex].isValid()) {
                 // find a free line
                 this->insert(i);
+                // std::cout << "allocate with index " << i << ' ';
+                // printLine();
                 return index + ONE_WAY_LINE_NUM * i;
             }
         }
@@ -223,7 +225,7 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
             if (hit) {
                 // update the BT
                 this->insert(i);
-                // std::cout << "hit with index " << index + ONE_WAY_LINE_NUM * i << ' ';
+                // std::cout << "hit with index " << i << ' ';
                 // printLine();
                 return index + ONE_WAY_LINE_NUM * i;
             } 
@@ -232,7 +234,7 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
         // not hit, must replace according to BtreeLine
         int k = this->find();
         this->insert(k);
-        // std::cout << "replace index " << index + ONE_WAY_LINE_NUM * k << ' ';
+        // std::cout << "replace index " << k << ' ';
         // printLine();
         return index + ONE_WAY_LINE_NUM * k;
     }

@@ -2,5 +2,6 @@
 ignore/
 debug/
 out/
+zms/
 .DS_Store
 src/main

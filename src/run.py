@@ -1,5 +1,6 @@
 # help to run the problem2
 import os
+import sys
 rps = ['LRU', 'BT', 'Score', 'Direct']
 w0s = ['back', 'through']
 w1s = ['alloc', 'non-alloc']
@@ -36,13 +37,15 @@ def run_exp5():
 
 
 def run_exp3():
+    cache_size = 0x20000
     task = 3
     rp = rps[1]
     w0 = w0s[0]
     w1 = w1s[0]
     config = './config.h'
     for block in (8, 32, 64):
-        for way in (1, 4, 8, 16384):
+        for idx in (1, 4, 8, -1):
+            way = idx if (idx != -1) else cache_size / block
             rp = rps[3] if (way == 1) else rps[1]
             lines = []
             lines_before = []
@@ -75,4 +78,14 @@ def run_exp3():
 
 
 # print(comp)
-run_exp3()
+if __name__ == "__main__":
+    task = int(sys.argv[1])
+    if task == 3:
+        run_exp3()
+    elif task == 4:
+        run_exp4()
+    elif task == 5:
+        run_exp5()
+    else:
+        print('task should be 3/4/5')
+        exit(-1)

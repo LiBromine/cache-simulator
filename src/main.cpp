@@ -38,8 +38,9 @@ int main(int argc, char *argv[]) {
         printUsage();
         exit(-1);
     }
+    if (WAY_NUM == 1) rp = ReplacePolicy::Direct;
     
-    const int COUNTER_MAX = 1000;
+    const int COUNTER_MAX = 20;
 
     // init
     Selector selector(rp);
@@ -97,9 +98,9 @@ int main(int argc, char *argv[]) {
             tag = getTag(addr, TAG_BITS, OFFSET_BITS + INDEX_BITS);
 
 #ifdef      DEBUG
-            // printLineBinary(offset, OFFSET_BITS);
-            // printLineBinary(index, INDEX_BITS);
-            // printLineBinary(tag, TAG_BITS);
+            printLineBinary(offset, OFFSET_BITS);
+            printLineBinary(index, INDEX_BITS);
+            printLineBinary(tag, TAG_BITS);
 #endif
 
             // 3. choose one block
