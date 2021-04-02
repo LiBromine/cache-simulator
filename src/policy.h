@@ -13,6 +13,9 @@ protected:
     bool test(int k);
     void set(int k);
     void clear(int k);
+    void printLine();
+    void insert(int k);
+    int find();
 };
 
 class Btree {

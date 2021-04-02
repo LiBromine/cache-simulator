@@ -1,6 +1,6 @@
 #include "policy.h"
 #include <cstring>
-// #include <iostream>
+#include <iostream>
 
 /* Direct method */
 int DirectMap::getRank(const Cache *cache, long long tag, int index) {
@@ -141,69 +141,99 @@ void BtreeLine::clear(int k) {
     meta[k >> 3] &= ~(0x80 >> (k & 0x07));
 }
 
+void BtreeLine::printLine() {
+    for (int i = 0; i < WAY_NUM; i++) {
+        std::cout << this->test(i);
+    }
+    std::cout << std::endl;
+}
+
+void BtreeLine::insert(int k) {
+    int node = (k + WAY_NUM);
+    for (int j = 0; j < BT_HEIGHT; j++) {
+        if (node & 0x1) {
+            this->clear(node >> 1);
+        } else {
+            this->set(node >> 1);
+        }
+        node >>= 1;
+    }
+}
+
+int BtreeLine::find() {
+    int k = 1;
+    for (int j = 0; j < BT_HEIGHT; j++) {
+        if (this->test(k)) {
+            k <<= 1;
+            k += 1;
+        } else {
+            k <<= 1;
+        }
+    }
+    return k - WAY_NUM;
+}
+
 int BtreeLine::access(const Cache* cache, long long tag, int index) {
     if (!this->test(0)) {
-        // Not all valid, hit or allocate
-        // std::cout << "not all valid" << std::endl;
-        // in this case, WAY_NUM - i - 1 represents the ith line's allocation
+        int flag = 1;
         for (int i = 0; i < WAY_NUM; i++) {
-            if (this->test(WAY_NUM - 1 - i)) {
-                // compare with a allocated line
-                // may not return 
-                bool hit = cache->data[index + ONE_WAY_LINE_NUM * i].isHit(tag);
-                if (hit) {
-                    // std::cout << "hit with index " << index + ONE_WAY_LINE_NUM * i << std::endl;
-                    return index + ONE_WAY_LINE_NUM * i;
-                }
-            } else {
-                // allocate a free line
-                // must return
-                this->set(WAY_NUM - 1 - i);
-                if (i == WAY_NUM - 1) { // go into All-valid state
-                    memset(meta, 0, (WAY_NUM + 7) >> 3);
-                    this->set(0);
-                }
-                // std::cout << "allocate with index " << index + ONE_WAY_LINE_NUM * i << std::endl;
-                return (index + ONE_WAY_LINE_NUM * i);
+            int tmpIndex = index + i * ONE_WAY_LINE_NUM;
+            if (!cache->data[tmpIndex].isValid()) {
+                flag = 0;
+                break;
             }
         }
-    } else {
-        // All valid, hit or replace
-        // std::cout << "all valid" << std::endl;
+        if (flag) this->set(0);
+    }
+
+
+    if (!this->test(0)) {
+        // Not all valid, hit or allocate
+        // std::cout << "not all valid ";
         for (int i = 0; i < WAY_NUM; i++) {
             // compare with a allocated line
             // may not return
             bool hit = cache->data[index + ONE_WAY_LINE_NUM * i].isHit(tag);
             if (hit) {
                 // update the BT
-                int node = (i + WAY_NUM);
-                for (int j = 0; j < BT_HEIGHT; j++) {
-                    if (node & 0x1) {
-                        this->clear(node >> 1);
-                    } else {
-                        this->set(node >> 1);
-                    }
-                    node >>= 1;
-                }
-                // std::cout << "hit with index " << index + ONE_WAY_LINE_NUM * i << std::endl;
+                this->insert(i);
+                // std::cout << "hit with index " << index + ONE_WAY_LINE_NUM * i << ' ';
+                // printLine();
+                return index + ONE_WAY_LINE_NUM * i;
+            } 
+        }
+
+        for (int i = 0; i < WAY_NUM; i++) {
+            // allocate a free line
+            int tmpIndex = index + i * ONE_WAY_LINE_NUM;
+            if (!cache->data[tmpIndex].isValid()) {
+                // find a free line
+                this->insert(i);
+                return index + ONE_WAY_LINE_NUM * i;
+            }
+        }
+        
+    } else {
+        // All valid, hit or replace
+        // std::cout << "all valid" << ' ';
+        for (int i = 0; i < WAY_NUM; i++) {
+            // compare with a allocated line
+            // may not return
+            bool hit = cache->data[index + ONE_WAY_LINE_NUM * i].isHit(tag);
+            if (hit) {
+                // update the BT
+                this->insert(i);
+                // std::cout << "hit with index " << index + ONE_WAY_LINE_NUM * i << ' ';
+                // printLine();
                 return index + ONE_WAY_LINE_NUM * i;
             } 
         }
 
         // not hit, must replace according to BtreeLine
-        int k = 1;
-        for (int j = 0; j < BT_HEIGHT; j++) {
-            if (this->test(k)) {
-                this->clear(k);
-                k <<= 1;
-                k += 1;
-            } else {
-                this->set(k);
-                k <<= 1;
-            }
-        }
-        k -= WAY_NUM;
-        // std::cout << "replace index " << index + ONE_WAY_LINE_NUM * k << std::endl;
+        int k = this->find();
+        this->insert(k);
+        // std::cout << "replace index " << index + ONE_WAY_LINE_NUM * k << ' ';
+        // printLine();
         return index + ONE_WAY_LINE_NUM * k;
     }
 
