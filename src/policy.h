@@ -7,7 +7,7 @@ class BtreeLine {
 public:
     char meta[(WAY_NUM + 7) >> 3];
     BtreeLine();
-    int access(const Cache *cache, long long tag, int index);
+    int access(const Cache *cache, long long tag, int index, char action);
 
 protected:
     bool test(int k);
@@ -25,7 +25,7 @@ public:
 
     Btree();
     ~Btree();
-    int getRank(const Cache *cache, long long tag, int index);
+    int getRank(const Cache *cache, long long tag, int index, char action);
 };
 
 // only for WAY_NUM = 8
@@ -99,7 +99,7 @@ public:
     Btree *BT;
     Scorer *S;
 
-    int getRank(const Cache *cache, long long tag, int index);
+    int getRank(const Cache *cache, long long tag, int index, char action);
     Selector(ReplacePolicy);
     ~Selector();
 };

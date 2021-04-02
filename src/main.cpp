@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 #endif
 
             // 3. choose one block
-            rank = selector.getRank(&cache, tag, index);
+            rank = selector.getRank(&cache, tag, index, action);
 #ifdef      DEBUG
             cout << rank << endl;
 #endif

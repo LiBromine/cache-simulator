@@ -2,6 +2,8 @@
 #include <cstring>
 #include <iostream>
 
+extern WritePolicy1 w1;
+
 /* Direct method */
 int DirectMap::getRank(const Cache *cache, long long tag, int index) {
     return index;
@@ -16,8 +18,8 @@ Btree::~Btree() {
     delete []this->data;
 }
 
-int Btree::getRank(const Cache *cache, long long tag, int index) {
-    return this->data[index].access(cache, tag, index);
+int Btree::getRank(const Cache *cache, long long tag, int index, char action) {
+    return this->data[index].access(cache, tag, index, action);
 }
 
 /* LRUstack method */
@@ -173,7 +175,7 @@ int BtreeLine::find() {
     return k - WAY_NUM;
 }
 
-int BtreeLine::access(const Cache* cache, long long tag, int index) {
+int BtreeLine::access(const Cache* cache, long long tag, int index, char action) {
     if (!this->test(0)) {
         int flag = 1;
         for (int i = 0; i < WAY_NUM; i++) {
@@ -202,6 +204,9 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
                 return index + ONE_WAY_LINE_NUM * i;
             } 
         }
+        /* cache miss, for write non-alloc and 'w' action */
+        if (action == 'w' && w1 == WritePolicy1::WriteNonAlloc) 
+            return index;
 
         for (int i = 0; i < WAY_NUM; i++) {
             // allocate a free line
@@ -231,6 +236,10 @@ int BtreeLine::access(const Cache* cache, long long tag, int index) {
             } 
         }
 
+        /* cache miss, for write non-alloc and 'w' action */
+        if (action == 'w' && w1 == WritePolicy1::WriteNonAlloc)
+            return index;
+            
         // not hit, must replace according to BtreeLine
         int k = this->find();
         this->insert(k);
@@ -422,13 +431,13 @@ Selector::~Selector() {
     }
 }
 
-int Selector::getRank(const Cache *cache, long long tag, int index) {
+int Selector::getRank(const Cache *cache, long long tag, int index, char action) {
     switch (this->rp) {
     case ReplacePolicy::Direct:
         return this->D->getRank(cache, tag, index);
         break;
     case ReplacePolicy::BT:
-        return this->BT->getRank(cache, tag, index);
+        return this->BT->getRank(cache, tag, index, action);
         break;
     case ReplacePolicy::LRU:
         return this->LRU->getRank(cache, tag, index);
