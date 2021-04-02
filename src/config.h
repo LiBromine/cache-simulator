@@ -22,10 +22,10 @@ enum WritePolicy1{
 const int CACHE_SIZE = 0x20000;
 const int ADDRESS_WIDTH = 64;
 
-const int LINE_SIZE = 8; // variable
+/*L*/ const int LINE_SIZE = 8; // variable
+/*W*/ const int WAY_NUM = 8;   // variable
+
 const int CACHE_LINE_NUM = CACHE_SIZE / LINE_SIZE;
-const int WAY_NUM = 8;   // variable
-// const bool FULL = false; // variable
 
 const int ONE_WAY_LINE_NUM = CACHE_LINE_NUM / WAY_NUM;
 const int OFFSET_BITS = log2(LINE_SIZE); // 3
