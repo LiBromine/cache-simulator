@@ -44,7 +44,7 @@ bool Cache::access(int rank, long long tag, char action, bool print) {
     }
     
     // 3. dirty or not
-    if (action == 'w' && w0 == WritePolicy0::WriteBack && hot_hit) {
+    if (action == 'w' && w0 == WritePolicy0::WriteBack && (hot_hit || w1 == WritePolicy1::WriteAlloc)) {
         data[rank].setDirty();
     }
 
@@ -95,6 +95,7 @@ void CacheLine::allocate(long long tag) {
         }
         tag >>= 1;
     }
+    this->clear(TAG_BITS + 1);
 }
 
 void CacheLine::setDirty() {
